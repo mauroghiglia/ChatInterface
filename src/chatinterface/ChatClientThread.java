@@ -34,7 +34,6 @@ public class ChatClientThread extends Thread {
     
     public void open() {
         try {
-//            streamIn  = new DataInputStream(socket.getInputStream());
             streamInObj = new ObjectInputStream(socket.getInputStream());
         } catch(IOException ioe) {
             System.out.println("Error getting input stream: " + ioe);
@@ -58,8 +57,6 @@ public class ChatClientThread extends Thread {
     public void run() {
         while (true) {
            try {
-
-                
                 chatMessage = (ChatMessage) streamInObj.readObject();
                 client.handle(chatMessage);
             } catch(IOException ioe) {

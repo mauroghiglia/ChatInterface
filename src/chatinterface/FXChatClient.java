@@ -56,6 +56,11 @@ public class FXChatClient extends Application {
     private TextField msgTextField = new TextField();
     private TextField toIPTextField = new TextField();
     private String IPAddress = getIPAddress();
+    ObjectOutputStream objectOutputStream;
+
+    public FXChatClient() throws IOException {
+        
+    }
     
     @Override
     public void start(Stage primaryStage) throws UnknownHostException {
@@ -114,6 +119,7 @@ public class FXChatClient extends Application {
 
     @Override
     public void init() throws Exception {
+        System.out.println("Main method called...");
         super.init();
         chatTextField.setItems(chatMessages);
     }
@@ -127,6 +133,7 @@ public class FXChatClient extends Application {
     }
     
     public void connect(String serverName, int serverPort) {
+        System.out.println("Connect method called...");
         addChatLine("Establishing connection. Please wait ...");
         try {
             socket = new Socket(serverName, serverPort);
@@ -140,12 +147,13 @@ public class FXChatClient extends Application {
     }
     
     private void sendChatMessage(String text, String myIPAddress, String toIPAddress) {
+        System.out.println("sendChatMessage method called...");
         if(toIPTextField.getText().equals("No IP yet...")) {
             System.out.println("Please enter destination IP...");
         } else {
             try {
-                new ObjectOutputStream(streamOut).writeObject(new ChatMessage(text, myIPAddress, toIPAddress));
-                streamOut.flush(); 
+                objectOutputStream.writeObject(new ChatMessage(text, myIPAddress, toIPAddress));
+                objectOutputStream.flush(); 
                 msgTextField.setText(""); 
             } catch(IOException ioe) {
                 addChatLine("Sending error: " + ioe.getMessage()); 
@@ -155,6 +163,7 @@ public class FXChatClient extends Application {
     }
     
     private String getIPAddress() {
+        System.out.println("getIPAddress method called...");
         /**
          * FOR TESTING PURPOSES
          * Assign a fake IP
@@ -170,11 +179,13 @@ public class FXChatClient extends Application {
     }
     
     private void addChatLine(String line) {
+        System.out.println("addChatLine method called...");
         chatMessages.add(line);
         chatScroll();
     }
     
     public void handle(ChatMessage msg) {
+        System.out.println("handle  method called...");
         if (msg.getMsg().equals(".bye")) {
             addChatLine("Good bye. Press RETURN to exit ...");  
             close(); 
@@ -184,9 +195,13 @@ public class FXChatClient extends Application {
     }
     
     public void open() {
+        System.out.println("open method called...");
         try {
             client = new ChatClientThread(this, IPAddress, socket);
             streamOut = new DataOutputStream(socket.getOutputStream());
+            objectOutputStream = new ObjectOutputStream(streamOut);
+            System.out.println("Should send IP Address here...");
+            sendConnectionData();
         } catch(IOException ioe) {
             addChatLine("Error opening output stream: " + ioe);
         } catch(Exception e) {
@@ -195,7 +210,8 @@ public class FXChatClient extends Application {
     }
     
    public void close() {
-        try {
+       System.out.println("close method called..."); 
+       try {
             if (streamOut != null)  streamOut.close();
             if (socket    != null)  socket.close(); 
         } catch(IOException ioe) {
@@ -206,7 +222,8 @@ public class FXChatClient extends Application {
     }
    
     private void chatScroll(){
-       Platform.runLater(new Runnable() {
+        System.out.println("chatScroll method called...");
+        Platform.runLater(new Runnable() {
             @Override
             public void run() {
                 chatTextField.scrollTo(chatMessages.size());
@@ -214,4 +231,10 @@ public class FXChatClient extends Application {
         });
     }
     
+    private void sendConnectionData() throws IOException {
+        System.out.println("sendConnectionData");
+        ChatMessage serviceMessage = new ChatMessage(1, getIPAddress());
+        objectOutputStream.writeObject(serviceMessage);
+        objectOutputStream.flush();
+    }
 }
