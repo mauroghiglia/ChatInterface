@@ -52,7 +52,7 @@ public class FXChatClient extends Application {
     private ChatClientThread client    = null;
     private Socket socket = null;
     private ObservableList<String> chatMessages = FXCollections.observableArrayList();
-    private ListView chatTextField = new ListView();
+    private ListView chatLines = new ListView();
     private TextField msgTextField = new TextField();
     private TextField toIPTextField = new TextField();
     private String IPAddress = getIPAddress();
@@ -65,24 +65,26 @@ public class FXChatClient extends Application {
     @Override
     public void start(Stage primaryStage) throws UnknownHostException {
         StackPane root = new StackPane();
-        Scene scene = new Scene(root, 300, 250);
+        Scene scene = new Scene(root, 400, 400);
         primaryStage.setTitle("My Chat App");
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
-        scene = new Scene(grid, 300, 275);
+        scene = new Scene(grid, 400, 400);
         Text scenetitle = new Text("My Chat App");
         scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
         grid.add(scenetitle, 0, 0, 2, 1);
         addChatLine("Chat Client v 1.0.1");
         
         //Form controls
-        grid.add(chatTextField, 1, 1);  
+        grid.add(chatLines, 1, 1);  
         Label myIPLabel = new Label("My IP:");
         grid.add(myIPLabel, 0, 2);
-        chatTextField.setEditable(false);
+        chatLines.setEditable(false);
+        chatLines.minHeight(300);
+        
         TextField myIPTextField = new TextField();
         grid.add(myIPTextField, 1, 2);
         Label toIPLabel = new Label("To IP:");
@@ -121,7 +123,7 @@ public class FXChatClient extends Application {
     public void init() throws Exception {
         System.out.println("Main method called...");
         super.init();
-        chatTextField.setItems(chatMessages);
+        chatLines.setItems(chatMessages);
     }
 
     /**
@@ -226,7 +228,7 @@ public class FXChatClient extends Application {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                chatTextField.scrollTo(chatMessages.size());
+                chatLines.scrollTo(chatMessages.size());
             }
         });
     }
