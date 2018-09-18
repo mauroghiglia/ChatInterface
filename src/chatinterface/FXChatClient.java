@@ -52,18 +52,23 @@ public class FXChatClient extends Application {
     private ChatClientThread client    = null;
     private Socket socket = null;
     private ObservableList<String> chatMessages = FXCollections.observableArrayList();
-    private ListView chatLines = new ListView();
+    
     private TextField msgTextField = new TextField();
     private TextField toIPTextField = new TextField();
     private String IPAddress = getIPAddress();
     ObjectOutputStream objectOutputStream;
-
+    String myIPAddress;
+    
+    //Form controls that need to be accessed externally
+    private ListView chatLines = new ListView();
+    
     public FXChatClient() throws IOException {
         
     }
     
     @Override
     public void start(Stage primaryStage) throws UnknownHostException {
+        myIPAddress = getIPAddress();
         StackPane root = new StackPane();
         Scene scene = new Scene(root, 400, 400);
         primaryStage.setTitle("My Chat App");
@@ -79,6 +84,8 @@ public class FXChatClient extends Application {
         addChatLine("Chat Client v 1.0.1");
         
         //Form controls
+        
+        //Main messages text area
         grid.add(chatLines, 1, 1);  
         Label myIPLabel = new Label("My IP:");
         grid.add(myIPLabel, 0, 2);
@@ -90,7 +97,9 @@ public class FXChatClient extends Application {
         Label toIPLabel = new Label("To IP:");
         grid.add(toIPLabel, 0, 3);
         grid.add(toIPTextField, 1, 3);
-        toIPTextField.setText("No IP yet...");
+        //Only for testing purposes
+        toIPTextField.setText("192.168.0.3");
+//        toIPTextField.setText("No IP yet...");
         grid.add(msgTextField, 1, 4);
         myIPTextField.setText(getIPAddress());
         myIPTextField.setDisable(true);
@@ -108,7 +117,7 @@ public class FXChatClient extends Application {
                 } else if(msgTextField.getText().equals("")) {
                     System.out.println("Please enter a message...");
                 } else {
-                    sendChatMessage(msgTextField.getText(), IPAddress, toIPTextField.getText());
+                    sendChatMessage(new ChatMessage(msgTextField.getText(), IPAddress, toIPTextField.getText()));
                 }
             }
         });
@@ -121,7 +130,6 @@ public class FXChatClient extends Application {
 
     @Override
     public void init() throws Exception {
-        System.out.println("Main method called...");
         super.init();
         chatLines.setItems(chatMessages);
     }
@@ -131,11 +139,9 @@ public class FXChatClient extends Application {
      */
     public static void main(String[] args) {
         launch(args);
-        System.out.println("test");
     }
     
     public void connect(String serverName, int serverPort) {
-        System.out.println("Connect method called...");
         addChatLine("Establishing connection. Please wait ...");
         try {
             socket = new Socket(serverName, serverPort);
@@ -148,13 +154,12 @@ public class FXChatClient extends Application {
         } 
     }
     
-    private void sendChatMessage(String text, String myIPAddress, String toIPAddress) {
-        System.out.println("sendChatMessage method called...");
+    private void sendChatMessage(ChatMessage msg) {
         if(toIPTextField.getText().equals("No IP yet...")) {
             System.out.println("Please enter destination IP...");
         } else {
             try {
-                objectOutputStream.writeObject(new ChatMessage(text, myIPAddress, toIPAddress));
+                objectOutputStream.writeObject(msg);
                 objectOutputStream.flush(); 
                 msgTextField.setText(""); 
             } catch(IOException ioe) {
@@ -165,7 +170,6 @@ public class FXChatClient extends Application {
     }
     
     private String getIPAddress() {
-        System.out.println("getIPAddress method called...");
         /**
          * FOR TESTING PURPOSES
          * Assign a fake IP
@@ -181,29 +185,56 @@ public class FXChatClient extends Application {
     }
     
     private void addChatLine(String line) {
-        System.out.println("addChatLine method called...");
-        chatMessages.add(line);
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                chatMessages.add(line);
+            }
+        });
         chatScroll();
     }
     
     public void handle(ChatMessage msg) {
-        System.out.println("handle  method called...");
-        if (msg.getMsg().equals(".bye")) {
-            addChatLine("Good bye. Press RETURN to exit ...");  
-            close(); 
-        } else {
-            addChatLine(msg.getMsg());
+        int type = msg.getMsgType();
+        String message = msg.getMsg();
+        if(type == 0) {
+            System.out.println("Normal message: " + message);
+            addChatLine(message);
+        } else if(type == 1) {
+            System.out.println("System message" + message);
+            switch(message) {
+                case "HELLO":
+                    System.out.println("Starting handshake...");
+                    sendChatMessage(new ChatMessage(1, "HELLO"));
+                    break;
+                    
+                case "YOURIP":
+                    System.out.println("Server asking for IP...");
+                    System.out.println("Sending IP...");
+                    //Must be corrected introducing the IP in a different field
+                    sendChatMessage(new ChatMessage(1, "MYIP", "192.168.0.2"));
+                    System.out.println("Requesting clients list...");
+                    sendChatMessage(new ChatMessage(1, "LIST"));
+                    break;
+                    
+                case "IPLIST":
+                    System.out.println("Received IP list...");
+                    addChatLine(msg.getIpAddress());
+            }
         }
+//        if (msg.getMsg().equals(".bye")) {
+//            addChatLine("Good bye. Press RETURN to exit ...");  
+//            close(); 
+//        } else {
+//            addChatLine(msg.getMsg());
+//        }
     }
     
     public void open() {
-        System.out.println("open method called...");
         try {
             client = new ChatClientThread(this, IPAddress, socket);
             streamOut = new DataOutputStream(socket.getOutputStream());
             objectOutputStream = new ObjectOutputStream(streamOut);
-            System.out.println("Should send IP Address here...");
-            sendConnectionData();
         } catch(IOException ioe) {
             addChatLine("Error opening output stream: " + ioe);
         } catch(Exception e) {
@@ -211,8 +242,7 @@ public class FXChatClient extends Application {
         }
     }
     
-   public void close() {
-       System.out.println("close method called..."); 
+   public void close() { 
        try {
             if (streamOut != null)  streamOut.close();
             if (socket    != null)  socket.close(); 
@@ -224,19 +254,11 @@ public class FXChatClient extends Application {
     }
    
     private void chatScroll(){
-        System.out.println("chatScroll method called...");
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
                 chatLines.scrollTo(chatMessages.size());
             }
         });
-    }
-    
-    private void sendConnectionData() throws IOException {
-        System.out.println("sendConnectionData");
-        ChatMessage serviceMessage = new ChatMessage(1, getIPAddress());
-        objectOutputStream.writeObject(serviceMessage);
-        objectOutputStream.flush();
     }
 }
