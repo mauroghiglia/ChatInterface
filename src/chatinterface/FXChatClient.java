@@ -98,7 +98,7 @@ public class FXChatClient extends Application {
         grid.add(toIPLabel, 0, 3);
         grid.add(toIPTextField, 1, 3);
         //Only for testing purposes
-        toIPTextField.setText("192.168.0.3");
+        toIPTextField.setText(getIPAddress());
 //        toIPTextField.setText("No IP yet...");
         grid.add(msgTextField, 1, 4);
         myIPTextField.setText(getIPAddress());
