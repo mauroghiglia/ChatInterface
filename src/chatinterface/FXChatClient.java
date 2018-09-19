@@ -8,11 +8,8 @@ package chatinterface;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.application.Platform;
@@ -20,27 +17,22 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.scene.image.*;
-import static javafx.scene.input.DataFormat.IMAGE;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
 import backgroundchatserver.ChatMessage;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -48,6 +40,8 @@ import backgroundchatserver.ChatMessage;
  */
 public class FXChatClient extends Application {
     
+    private static final Pattern PATTERN = Pattern.compile(
+        "^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
     private DataOutputStream streamOut = null;
     private ChatClientThread client    = null;
     private Socket socket = null;
@@ -57,7 +51,6 @@ public class FXChatClient extends Application {
     private TextField toIPTextField = new TextField();
     private String IPAddress = getIPAddress();
     ObjectOutputStream objectOutputStream;
-    String myIPAddress;
     
     //Form controls that need to be accessed externally
     private ListView chatLines = new ListView();
@@ -68,7 +61,6 @@ public class FXChatClient extends Application {
     
     @Override
     public void start(Stage primaryStage) throws UnknownHostException {
-        myIPAddress = getIPAddress();
         StackPane root = new StackPane();
         Scene scene = new Scene(root, 400, 400);
         primaryStage.setTitle("My Chat App");
@@ -114,6 +106,8 @@ public class FXChatClient extends Application {
             public void handle(ActionEvent e) {
                 if (toIPTextField.getText().equals("No IP yet...")) {
                     System.out.println("Please enter destination IP...");
+                } else if(!IPV4validate(toIPTextField.getText())) {
+                    System.out.println("Please insert a valid IP...");
                 } else if(msgTextField.getText().equals("")) {
                     System.out.println("Please enter a message...");
                 } else {
@@ -260,5 +254,9 @@ public class FXChatClient extends Application {
                 chatLines.scrollTo(chatMessages.size());
             }
         });
+    }
+    
+    public static boolean IPV4validate(final String ip) {
+        return PATTERN.matcher(ip).matches();
     }
 }
