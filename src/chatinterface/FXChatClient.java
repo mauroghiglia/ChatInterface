@@ -98,7 +98,7 @@ public class FXChatClient extends Application {
         grid.add(toIPLabel, 0, 3);
         grid.add(toIPTextField, 1, 3);
         //Only for testing purposes
-        toIPTextField.setText(getIPAddress());
+        toIPTextField.setText("192.168.0.3");
 //        toIPTextField.setText("No IP yet...");
         grid.add(msgTextField, 1, 4);
         myIPTextField.setText(getIPAddress());
@@ -212,7 +212,7 @@ public class FXChatClient extends Application {
                     System.out.println("Server asking for IP...");
                     System.out.println("Sending IP...");
                     //Must be corrected introducing the IP in a different field
-                    sendChatMessage(new ChatMessage(1, "MYIP", "192.168.0.2"));
+                    sendChatMessage(new ChatMessage(1, "MYIP", getIPAddress()));
                     System.out.println("Requesting clients list...");
                     sendChatMessage(new ChatMessage(1, "LIST"));
                     break;
