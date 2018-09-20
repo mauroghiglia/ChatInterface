@@ -5,13 +5,11 @@
  */
 package chatinterface;
 
-import backgroundchatserver.ChatMessage;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,16 +36,16 @@ public class DBConnection {
     
     public void createTable() {
         try {
-            conn.createStatement().execute("CREATE TABLE messages (FromIP varchar(15), ToIP varchar(15), Msg varchar(50))");
+            conn.createStatement().execute("CREATE TABLE msgLines (Line varchar(50))");
         } catch (SQLException ex) {
 //            Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("Table messages already existing");
+                System.out.println("Table msgLines already existing");
         }
     }
     
-    public void insertIntoTable(String fromIP, String toIP, String msg) {
+    public void insertIntoTable(String line) {
         try {
-            conn.createStatement().execute("INSERT INTO messages VALUES ('"+fromIP+"', '"+toIP+"', '"+msg+"')");
+            conn.createStatement().execute("INSERT INTO msgLines VALUES ('"+line+"')");
         } catch (SQLException ex) {
             Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -56,46 +54,26 @@ public class DBConnection {
     public void printAll() {
         try {
             Statement statement = this.conn.createStatement();
-            ResultSet res = statement.executeQuery("SELECT * FROM messages");
-            System.out.println("Content of messages table");
+            ResultSet res = statement.executeQuery("SELECT * FROM msgLines");
             while(res.next()) {
-                System.out.println(res.getString("FromIP") 
-                    + " " + res.getString("ToIP") 
-                    + " " + res.getString("Msg"));
+                System.out.println(res.getString("Line"));
             }
                     } catch (SQLException ex) {
             Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-    
-    public ArrayList printSelToArrayList(String ip) {
-        String myMsg;
-        ArrayList<String> messages = new ArrayList<>();
-        try {
-            Statement statement = this.conn.createStatement();
-            ResultSet res = statement.executeQuery("SELECT * FROM messages");
-            System.out.println("Content of messages table");
-            while(res.next()) {
-                String fromIP = res.getString("FromIP");
-                String toIP = res.getString("ToIP");
-                String msg = res.getString("Msg");
-                if(fromIP.equals(ip)) {
-                    myMsg = "From: you\n\t" + msg;
-                    messages.add(myMsg);
-                } else if(toIP.equals(ip)) {
-                    myMsg = "From: " + fromIP + "\n" + msg;
-                    messages.add(myMsg);
-                }
-            }
-                    } catch (SQLException ex) {
-            Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return messages;
     }
     
     public void emptyTable(){
         try {
-            conn.createStatement().execute("DELETE FROM messages");
+            conn.createStatement().execute("DELETE FROM msgLines");
+        } catch (SQLException ex) {
+            Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void dropTable(){
+        try {
+            conn.createStatement().execute("DROP TABLE msgLines");
         } catch (SQLException ex) {
             Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
