@@ -32,6 +32,9 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.layout.HBox;
 import backgroundchatserver.ChatMessage;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -45,15 +48,19 @@ public class FXChatClient extends Application {
     private DataOutputStream streamOut = null;
     private ChatClientThread client    = null;
     private Socket socket = null;
-    private ObservableList<String> chatMessages = FXCollections.observableArrayList();
+    private ObservableList<String> chatLines = FXCollections.observableArrayList();
+    
+    
     
     private TextField msgTextField = new TextField();
     private TextField toIPTextField = new TextField();
     private String IPAddress = getIPAddress();
     ObjectOutputStream objectOutputStream;
+    DBConnection db;
+    ArrayList<String> dbMessages = new ArrayList<>();
     
     //Form controls that need to be accessed externally
-    private ListView chatLines = new ListView();
+    private ListView chatControl = new ListView();
     
     public FXChatClient() throws IOException {
         
@@ -61,6 +68,14 @@ public class FXChatClient extends Application {
     
     @Override
     public void start(Stage primaryStage) throws UnknownHostException {
+        //Opening Derby Embedded Database Connection
+        db = new DBConnection();
+        
+        dbMessages = db.printSelToArrayList(getIPAddress());
+        //Creating messages table if necessary
+//        db.emptyTable();
+        db.createTable();
+        
         StackPane root = new StackPane();
         Scene scene = new Scene(root, 400, 400);
         primaryStage.setTitle("My Chat App");
@@ -78,11 +93,11 @@ public class FXChatClient extends Application {
         //Form controls
         
         //Main messages text area
-        grid.add(chatLines, 1, 1);  
+        grid.add(chatControl, 1, 1);  
         Label myIPLabel = new Label("My IP:");
         grid.add(myIPLabel, 0, 2);
-        chatLines.setEditable(false);
-        chatLines.minHeight(300);
+        chatControl.setEditable(false);
+        chatControl.minHeight(300);
         
         TextField myIPTextField = new TextField();
         grid.add(myIPTextField, 1, 2);
@@ -120,12 +135,13 @@ public class FXChatClient extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         connect("127.0.0.1", 4444);
+        
     }
 
     @Override
     public void init() throws Exception {
         super.init();
-        chatLines.setItems(chatMessages);
+        chatControl.setItems(chatLines);
     }
 
     /**
@@ -133,6 +149,7 @@ public class FXChatClient extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+        
     }
     
     public void connect(String serverName, int serverPort) {
@@ -140,6 +157,7 @@ public class FXChatClient extends Application {
         try {
             socket = new Socket(serverName, serverPort);
             addChatLine("Connected..." + socket);
+            
             open();
         } catch(UnknownHostException uhe) {
           System.out.println("Host unknown: " + uhe.getMessage()); 
@@ -156,6 +174,12 @@ public class FXChatClient extends Application {
                 objectOutputStream.writeObject(msg);
                 objectOutputStream.flush(); 
                 msgTextField.setText(""); 
+                if(msg.getMsgType() == 0) {
+                    db.insertIntoTable(msg.getIpAddress(), msg.getToIPAddress(), msg.getMsg());
+//                    db.printAll();
+                }
+                
+                
             } catch(IOException ioe) {
                 addChatLine("Sending error: " + ioe.getMessage()); 
                 close(); 
@@ -182,7 +206,7 @@ public class FXChatClient extends Application {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                chatMessages.add(line);
+                chatLines.add(line);
             }
         });
         chatScroll();
@@ -191,8 +215,12 @@ public class FXChatClient extends Application {
     public void handle(ChatMessage msg) {
         int type = msg.getMsgType();
         String message = msg.getMsg();
+        
+//        String dbMessage = "";
         if(type == 0) {
             System.out.println("Normal message: " + message);
+            db.insertIntoTable(msg.getIpAddress(), msg.getToIPAddress(), msg.getMsg());
+            db.printAll();
             addChatLine(message);
         } else if(type == 1) {
             System.out.println("System message" + message);
@@ -205,7 +233,6 @@ public class FXChatClient extends Application {
                 case "YOURIP":
                     System.out.println("Server asking for IP...");
                     System.out.println("Sending IP...");
-                    //Must be corrected introducing the IP in a different field
                     sendChatMessage(new ChatMessage(1, "MYIP", getIPAddress()));
                     System.out.println("Requesting clients list...");
                     sendChatMessage(new ChatMessage(1, "LIST"));
@@ -213,15 +240,22 @@ public class FXChatClient extends Application {
                     
                 case "IPLIST":
                     System.out.println("Received IP list...");
+            {
+                try {
+                    Thread.sleep(2000);
+                    
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(FXChatClient.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+                    chatClear();
+//                    addChatLine("Test line");
+                    
+                    dbMessages.forEach(dbMessage -> addChatLine(dbMessage));
                     addChatLine(msg.getIpAddress());
+                    
             }
         }
-//        if (msg.getMsg().equals(".bye")) {
-//            addChatLine("Good bye. Press RETURN to exit ...");  
-//            close(); 
-//        } else {
-//            addChatLine(msg.getMsg());
-//        }
     }
     
     public void open() {
@@ -229,6 +263,7 @@ public class FXChatClient extends Application {
             client = new ChatClientThread(this, IPAddress, socket);
             streamOut = new DataOutputStream(socket.getOutputStream());
             objectOutputStream = new ObjectOutputStream(streamOut);
+            
         } catch(IOException ioe) {
             addChatLine("Error opening output stream: " + ioe);
         } catch(Exception e) {
@@ -251,9 +286,19 @@ public class FXChatClient extends Application {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                chatLines.scrollTo(chatMessages.size());
+                chatControl.scrollTo(chatLines.size());
             }
         });
+    }
+    
+    private void chatClear() {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                chatLines.clear();
+            }
+        });
+        
     }
     
     public static boolean IPV4validate(final String ip) {

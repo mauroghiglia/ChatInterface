@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Thu Sep 20 13:18:45 EEST 2018:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0165-f67d-3488-000004532f30 
+on database directory D:\Users\MGhigl\Box\JavaWorkspace\ChatInterface\chatinterface with class loader sun.misc.Launcher$AppClassLoader@6d06d69c 
+Loaded from file:/D:/Users/MGhigl/Box/JavaWorkspace/ChatInterface/src/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_171-b11
+user.dir=D:\Users\MGhigl\Box\JavaWorkspace\ChatInterface
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
