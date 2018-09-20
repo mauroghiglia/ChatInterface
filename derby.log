@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Thu Sep 20 13:18:45 EEST 2018:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0165-f67d-3488-000004532f30 
+Thu Sep 20 18:08:43 EEST 2018:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0165-f786-aaa8-000004528710 
 on database directory D:\Users\MGhigl\Box\JavaWorkspace\ChatInterface\chatinterface with class loader sun.misc.Launcher$AppClassLoader@6d06d69c 
 Loaded from file:/D:/Users/MGhigl/Box/JavaWorkspace/ChatInterface/src/lib/derby.jar
 java.vendor=Oracle Corporation

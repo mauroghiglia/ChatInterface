@@ -12,11 +12,11 @@ package chatinterface;
 public class manageDB {
     public static void main(String[] args) {
         DBConnection db = new DBConnection();
-        db.createTable();
-        db.insertIntoTable("Hello");
-        db.insertIntoTable("How are you?");
+//        db.createTable();
+//        db.insertIntoTable("Hello");
+//        db.insertIntoTable("How are you?");
         db.printAll();
-        db.emptyTable();
+//        db.emptyTable();
 //        db.dropTable();
     }
 }

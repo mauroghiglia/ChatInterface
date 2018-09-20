@@ -71,9 +71,8 @@ public class FXChatClient extends Application {
         //Opening Derby Embedded Database Connection
         db = new DBConnection();
         
-        dbMessages = db.printSelToArrayList(getIPAddress());
+        dbMessages = db.printToArrayList();
         //Creating messages table if necessary
-//        db.emptyTable();
         db.createTable();
         
         StackPane root = new StackPane();
@@ -167,6 +166,7 @@ public class FXChatClient extends Application {
     }
     
     private void sendChatMessage(ChatMessage msg) {
+        String message = msg.getMsg();
         if(toIPTextField.getText().equals("No IP yet...")) {
             System.out.println("Please enter destination IP...");
         } else {
@@ -174,16 +174,19 @@ public class FXChatClient extends Application {
                 objectOutputStream.writeObject(msg);
                 objectOutputStream.flush(); 
                 msgTextField.setText(""); 
-                if(msg.getMsgType() == 0) {
-                    db.insertIntoTable(msg.getIpAddress(), msg.getToIPAddress(), msg.getMsg());
-//                    db.printAll();
-                }
-                
                 
             } catch(IOException ioe) {
                 addChatLine("Sending error: " + ioe.getMessage()); 
                 close(); 
             }
+        }
+        if(msg.getMsgType() == 0) {
+            if(msg.getToIPAddress().equals(msg.getIpAddress())) {
+                message = "You received from yourself:\n\t" + msg.getMsg();
+            } else {
+                message = "You wrote to: " + msg.getToIPAddress() + "\n\t" + msg.getMsg();
+            }
+            db.insertIntoTable(message);
         }
     }
     
@@ -202,6 +205,35 @@ public class FXChatClient extends Application {
 //        return (String) inetAddress.getHostAddress();
     }
     
+    /*
+     * The following method transforms a Chatmessage object
+     * into a chat line String
+     */
+    
+    public void processInboundMessage(ChatMessage msg) {
+        String message;
+        if(msg.getToIPAddress().equals(msg.getIpAddress())) {
+                message = "You wrote to yourself:\n\t" + msg.getMsg();
+            } else {
+                message = msg.getIpAddress() + " wrote:\n\t" + msg.getMsg();
+            }
+        addChatLine(message);
+        db.insertIntoTable(message);
+    }
+    
+    public String processOutboundMessage(ChatMessage msg) {
+        if(msg.getToIPAddress().equals(msg.getIpAddress())) {
+                return "You received from yourself:\n\t" + msg.getMsg();
+            } else {
+                return "You wrote to: " + msg.getToIPAddress() + "\n\t" + msg.getMsg();
+            }
+    }
+    
+//    public void addMessageToChat(ChatMessage msg) {
+//        db.insertIntoTable(createMessage(msg));
+//        addChatLine(createMessage(msg));
+//    }
+    
     private void addChatLine(String line) {
         Platform.runLater(new Runnable() {
             @Override
@@ -216,12 +248,17 @@ public class FXChatClient extends Application {
         int type = msg.getMsgType();
         String message = msg.getMsg();
         
-//        String dbMessage = "";
         if(type == 0) {
+            /*
+             * These are normal messages received from server. 
+             * The "srvMsg" boolean field should be set on True
+             * These messages are sent to addMessageToChat() that
+             * creates message lines and send them to chat interface
+             * and to the database
+             */
             System.out.println("Normal message: " + message);
-            db.insertIntoTable(msg.getIpAddress(), msg.getToIPAddress(), msg.getMsg());
-            db.printAll();
-            addChatLine(message);
+//            addMessageToChat(msg);
+            processInboundMessage(msg);
         } else if(type == 1) {
             System.out.println("System message" + message);
             switch(message) {

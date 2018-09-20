@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,9 +59,23 @@ public class DBConnection {
             while(res.next()) {
                 System.out.println(res.getString("Line"));
             }
-                    } catch (SQLException ex) {
+        } catch (SQLException ex) {
             Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public ArrayList printToArrayList() {
+        ArrayList<String> messageArray = new ArrayList<>();
+        try {
+            Statement statement = this.conn.createStatement();
+            ResultSet res = statement.executeQuery("SELECT * FROM msgLines");
+            while(res.next()) {
+                messageArray.add(res.getString("Line"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return messageArray;
     }
     
     public void emptyTable(){
