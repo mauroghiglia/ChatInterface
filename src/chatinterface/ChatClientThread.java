@@ -8,6 +8,7 @@ package chatinterface;
 /**
  *
  * @author MGhigl
+ * Version 1.1.1
  */
 import java.net.*;
 import java.io.*;
