@@ -1,3 +1,3 @@
 # ChatInterface
 ## Part of the Project: Chat Application
-#### Description: a simple multi-thread chat server awaiting for connection with Chat Interface Instances and opening a thread for each of the connected instances.
+#### Description: a simple multi-thread Java FX chat interface able to connect to the Background Chat Server, in the same project.
